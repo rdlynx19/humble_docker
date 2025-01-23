@@ -13,6 +13,6 @@ docker run -it --rm \
   -e XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \
   -e PULSE_SERVER=$PULSE_SERVER \
   -e LIBGL_ALWAYS_SOFTWARE=1 \
-  --volume=/home/itadori/humble_docker/workspace/:/home/ros/workspace \
+  --volume=/home/redhairedlynx/gitClones/humble_docker/workspace/:/home/ros/workspace \
   pi-humble
 

@@ -45,7 +45,7 @@ RUN sudo add-apt-repository universe \
 ENV ROS_DISTRO=humble
 ENV AMENT_PREFIX_PATH=/opt/ros/humble
 ENV COLCON_PREFIX_PATH=/opt/ros/humble
-#ENV LD_LIBRARY_PATH=/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib
+ENV LD_LIBRARY_PATH=/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib
 ENV PATH=/opt/ros/humble/bin:$PATH
 ENV PYTHONPATH=/opt/ros/humble/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages
 ENV ROS_PYTHON_VERSION=3
@@ -94,6 +94,11 @@ RUN apt-get update && apt-get install -y git-core bash-completion \
   && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
   && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /home/$USERNAME/workspace && \
+chown -R $USERNAME:$USERNAME /home/$USERNAME/workspace
+
+
+
 ENV DEBIAN_FRONTEND=
 ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 ENV DEBIAN_FRONTEND=noninteractive
@@ -114,26 +119,28 @@ RUN apt-get update \
     software-properties-common \
  && rm -rf /var/lib/apt/lists/*
 
-# RUN wget -qO- https://docs.luxonis.com/install_dependencies.sh | bash
-# RUN python3 -m pip install depthai
+RUN apt-get update
+
+RUN wget -qO- https://docs.luxonis.com/install_dependencies.sh | bash
+RUN python3 -m pip install depthai
 RUN apt-get update && apt-get install -y wget build-essential cmake pkg-config libjpeg-dev libtiff5-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libgtk2.0-dev libgtk-3-dev libatlas-base-dev gfortran git libopencv-dev
 
 ADD ./docker_dependencies.sh .
 RUN ./docker_dependencies.sh
 
-    
-
 RUN pip install -U pip && pip install --extra-index-url https://www.piwheels.org/simple/ --prefer-binary opencv-python
+
+
 
 # Copy over the files
 # COPY . /depthai-python
-ADD . ./depthai-python
+# ADD . ./depthai-python
 # Install C++ library
-RUN cmake -S /depthai-python/depthai-core -B /build -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local
-RUN cmake --build /build --parallel 4 --config Relase --target install
+# RUN cmake -S /depthai-python/depthai-core -B /build -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local
+# RUN cmake --build /build --parallel 4 --config Relase --target install
 
 # Install Python library
-RUN cd /depthai-python && python3 -m pip install . 
+# RUN cd /depthai-python && python3 -m pip install . 
 
 # RUN wget https://github.com/IntelRealSense/librealsense/raw/master/scripts/libuvc_installation.sh
 
@@ -150,18 +157,33 @@ RUN cd /depthai-python && python3 -m pip install .
 RUN apt-get update \
  && apt-get install -y ros-humble-rtabmap-ros \
  && apt-get install -y ros-humble-turtlebot3* \
- && apt-get install -y ros-humble-depthai-ros \
+ && apt-get install -y ros-humble-depthai-ros \ 
+ && apt-get install -y ros-humble-rmw-cyclonedds-cpp \
  && apt-get install -y usbutils \
+ && apt-get install -y tmux \
  && rm -rf /var/lib/apt/lists/*
 
 
-RUN /bin/bash -c "source /opt/ros/humble/setup.bash"
+RUN apt-get update \
+ && apt-get install -y nano \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN echo "source /opt/ros/humble/setup.bash" >> /home/ros/.bashrc
+RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> /home/ros/.bashrc
+RUN echo "export ROS_DOMAIN_ID=43" >> /home/ros/.bashrc
+
 
 ENV HOME=/home/ros
 ENV USER=ros
-RUN chown -R ros:ros /home/ros
+RUN chown -R ros:ros /home/ros/
 
-USER ros
+WORKDIR /home/ros
+
+COPY ./.tmux.conf .
+
+WORKDIR /home/$USERNAME/workspace 
+
+USER $USERNAME
 
 ENV DEBIAN_FRONTEND=
 
