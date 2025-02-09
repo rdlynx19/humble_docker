@@ -117,10 +117,13 @@ RUN apt-get update \
     libusb-1.0-0 \
     udev \
     software-properties-common \
+    python3.12-venv \
  && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
  && apt-get install -y nano \
+ && apt-get install -y vim-gtk3 \
+ && apt-get install -y tmux \
  && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/$USERNAME/.bashrc
@@ -131,6 +134,19 @@ ENV USER=px4
 RUN chown -R px4:px4 /home/px4/
 
 WORKDIR /home/$USERNAME
+
+RUN git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git \
+    && cd Micro-XRCE-DDS-Agent \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make \
+    && sudo make install \
+    && sudo ldconfig /usr/local/lib/    
+
+RUN apt-get update \
+ && apt-get install -y ros-jazzy-tf-transformations \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY ./.tmux.conf .	
 
