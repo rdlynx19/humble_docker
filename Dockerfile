@@ -121,44 +121,10 @@ RUN apt-get update \
 
 RUN apt-get update
 
-RUN wget -qO- https://docs.luxonis.com/install_dependencies.sh | bash
-RUN python3 -m pip install depthai
-RUN apt-get update && apt-get install -y wget build-essential cmake pkg-config libjpeg-dev libtiff5-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libgtk2.0-dev libgtk-3-dev libatlas-base-dev gfortran git libopencv-dev
-
-ADD ./docker_dependencies.sh .
-RUN ./docker_dependencies.sh
-
-RUN pip install -U pip && pip install --extra-index-url https://www.piwheels.org/simple/ --prefer-binary opencv-python
-
-
-
-# Copy over the files
-# COPY . /depthai-python
-# ADD . ./depthai-python
-# Install C++ library
-# RUN cmake -S /depthai-python/depthai-core -B /build -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local
-# RUN cmake --build /build --parallel 4 --config Relase --target install
-
-# Install Python library
-# RUN cd /depthai-python && python3 -m pip install . 
-
-# RUN wget https://github.com/IntelRealSense/librealsense/raw/master/scripts/libuvc_installation.sh
-
-# RUN chmod +x libuvc_installation.sh
-
-# RUN /bin/bash -c "./libuvc_installation.sh"
- 
-# RUN apt-get update \
-# && apt-get install -y \ 
-   #  ros-humble-librealsense2* \
-   # ros-humble-realsense2-* \
-# && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
- && apt-get install -y ros-humble-rtabmap-ros \
- && apt-get install -y ros-humble-turtlebot3* \
- && apt-get install -y ros-humble-depthai-ros \ 
- && apt-get install -y ros-humble-rmw-cyclonedds-cpp \
+ && apt-get install ros-humble-slam-toolbox \
+ && apt-get install terminator \
  && apt-get install -y usbutils \
  && apt-get install -y tmux \
  && rm -rf /var/lib/apt/lists/*
@@ -168,18 +134,11 @@ RUN apt-get update \
  && apt-get install -y nano \
  && rm -rf /var/lib/apt/lists/*
 
-RUN echo "source /opt/ros/humble/setup.bash" >> /home/ros/.bashrc
-RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> /home/ros/.bashrc
-RUN echo "export ROS_DOMAIN_ID=43" >> /home/ros/.bashrc
 
 
-ENV HOME=/home/ros
+ENV HOME=/home/$USERNAME
 ENV USER=ros
 RUN chown -R ros:ros /home/ros/
-
-WORKDIR /home/ros
-
-COPY ./.tmux.conf .
 
 WORKDIR /home/$USERNAME/workspace 
 
